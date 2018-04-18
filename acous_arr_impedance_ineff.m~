@@ -37,7 +37,6 @@ function [pp,pv] = acous_arr_impedance_ineff( s_a, s_b, delta_t )
         v_s( :, :, idx_omega ) = v_s( :, :, idx_omega) / (1i * omega_vec(idx_omega));
     end
     
-    % initialize new arrays for the output
     pp = zeros( count_sensor, count_sensor, count_omega );
     ps = zeros( count_sensor, count_sensor, count_omega );
     
@@ -48,19 +47,19 @@ function [pp,pv] = acous_arr_impedance_ineff( s_a, s_b, delta_t )
             % make it 4x1 * 1x4 to generate the desired matrix
             p_i = transpose( p_s( idx_theta, :, idx_omega ) );
             p_j = p_i';
-            v_j = transpose( v_s( idx_theta, :, idx_omega ) )';
+            v_j = transpose( v_s( idx_theta, :, idx_omega )' );
             
-            % pp = <p_i, p_j*>, ps = <p_i, s_j*> for each omega
-            pp( :, :, idx_omega) = pp( :, :, idx_omega) + p_i * p_j;
-            ps( :, :, idx_omega) = ps( :, :, idx_omega) + p_i * v_j;
+            pp( :, :, idx_omega) = pp(:,:, idx_omega) + p_i * p_j;
+            ps_temp = ps_temp + p_i * v_j;
         end
         
-        % find the average across the different theta angles
-        pp( :, :, idx_omega) = pp( :, :, idx_omega) / count_theta; 
-        ps( :, :, idx_omega) = ps( :, :, idx_omega) / count_theta; 
+        pp_temp = pp_temp / count_theta;
+        ps_temp = ps_temp / count_theta;
         
     end
-   
+    
+    pp = p_s;
+    pv = v_s;
     return;
 end
 
