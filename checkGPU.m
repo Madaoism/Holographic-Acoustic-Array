@@ -19,7 +19,7 @@ time_CPU_limit = zeros(numel(ind_limit), run_count_per_config);
 
 step = 50.0/double(numel(ind_n));
 for idx = 1:numel(ind_n)
-    
+
     for r = 1:run_count_per_config
         [t_c, t_g] = gpuBenchMark(1, ind_n(idx), 10);
         time_CPU_n(idx, r) = t_c;
@@ -27,14 +27,14 @@ for idx = 1:numel(ind_n)
     end
     progress = progress + step;
     fprintf("Current progress: %d%%\n", progress);
-    
+
 end
 
 disp("Finished first half of testing");
 
 step = 50.0/double(numel(ind_limit));
 for idx = 1:numel(ind_limit)
-    
+
     for r = 1:run_count_per_config
         [t_c, t_g] = gpuBenchMark(1, 512, ind_limit(idx));
         time_CPU_limit(idx, r) = t_c;
@@ -42,7 +42,7 @@ for idx = 1:numel(ind_limit)
     end
     progress = progress + step;
     fprintf("Current progress: %d%%\n", progress);
-    
+
 end
 
 mean_time_GPU_n = zeros(1, numel(ind_n));
@@ -72,10 +72,10 @@ end
 s1 = "GPU time";
 s2 = "CPU time";
 
-figure; 
+figure;
 subplot(2,1,1);
 p1 = errorbar(ind_n, mean_time_GPU_n, sd_time_GPU_n); 
-%p1 = errorbar(ind_n(2:numel(ind_n)), mean_time_GPU_n(2:numel(ind_n)), sd_time_GPU_n(2:numel(ind_n))); 
+%p1 = errorbar(ind_n(2:numel(ind_n)), mean_time_GPU_n(2:numel(ind_n)), sd_time_GPU_n(2:numel(ind_n)));
 title('GPU time against number of elements');
 xlabel('number of elements');
 ylabel('time spent');
@@ -90,7 +90,7 @@ legend(p2, s2);
 
 figure;
 subplot(2,1,1);
-p1 = errorbar(ind_limit, mean_time_GPU_limit, sd_time_GPU_limit); 
+p1 = errorbar(ind_limit, mean_time_GPU_limit, sd_time_GPU_limit);
 title('GPU time against number of FFTs');
 xlabel('number of FFTs');
 ylabel('time spent');
