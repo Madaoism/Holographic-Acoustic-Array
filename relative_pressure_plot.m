@@ -1,5 +1,5 @@
 %% Load workspace
-load("post_impedance_workspace", "pp", "vp");
+%load("post_impedance_workspace", "pp", "vp");
 
 %% Define constants
 density = 1.225; % density of the medium, which is air
@@ -7,6 +7,20 @@ speed_sound = 343; % speed of sound in air
 z_ref = density * speed_sound; % impedance value reference
 [ count_sensor, count_sensor2, count_omega ] = size(pp);
 zs = zeros( count_sensor, count_sensor, count_omega );
+count_sample = count_omega * 2;
+
+%% Find the omega values
+% find the frequency values of the results of fft
+% the omega should be in the range of 0 to 1/delta_t or 1/delta_t/2
+delta_t = 4e-5;
+f_delta = 1 / (delta_t * count_sample);
+fs = 1 / delta_t;
+raw_count_omega = count_sample ;
+raw_omega_vec = 2 * pi * linspace(0, fs - f_delta, raw_count_omega );
+
+% truncate the vectors
+count_omega = uint32( raw_count_omega/2 );
+omega_vec = raw_omega_vec( 1 : count_omega );
 
 %% Calculate the points of the cylinder itself
 N = 300;
@@ -26,14 +40,14 @@ distances = sqrt(distances); % The distance between each pair of nodes at index 
 % the impedance of each frequence between each pair of sensor
 for freq_idx = 1 : count_omega
    
-    zs( :, :, freq_idx ) = pp( :, :, freq_idx ) / vp( :, :, freq_idx );
+    zs( :, :, freq_idx ) = pp_sort_dist( :, :, freq_idx ) / vp_sort_dist( :, :, freq_idx );
     %zs( :, :, freq_idx ) = zs( :, :, freq_idx ) ./ distances ;
     
 end
 
 %% Do a random color plot of the values
-freq_idx = 153;
-sensor_idx = 130;
+freq_idx = 453;
+sensor_idx = 134;
 figure;
 hold on;
 
@@ -49,21 +63,43 @@ colorbar;
 hold off;
 
 %% PLOT AGAINST DISTANCE
-sensor_idx = 155;
-freq_idx = 200;
-lambda = speed_sound / (omega_vec(freq_idx) / 2 /pi);
+freq_idx = 500;
+%lambda = speed_sound / (omega_vec(freq_idx) / 2 /pi);
+
+p_relative = zeros( 285, 285 );
+dist_sorted = zeros( 285, 285 );
+
+for idx_sensor = 1:285
+    
+    temp_p = log10( abs( pp_sort_dist(:, idx_sensor, freq_idx ) ) );
+    temp_p = temp_p(:);
+    
+    temp_dist = distances(:, idx_sensor);
+    temp_dist = sort(temp_dist);
+    
+    
+    p_relative( :, idx_sensor ) = temp_p;
+    dist_sorted( :, idx_sensor ) = temp_dist;
+
+end
+
+p_relative = p_relative - max(p_relative(:));
+
 figure;
 hold on;
 
-temp = log10( abs( pp(:, sensor_idx, freq_idx ) ) );
-temp = temp - max(temp);
-s = scatter( distances(:, sensor_idx)./lambda, temp );
+s = scatter( dist_sorted(:), p_relative(:), 1 );
 
-p_sensor = p_sphere( distances(:, sensor_idx) , (omega_vec(freq_idx) ./(2* pi)) , speed_sound);
-p = plot( distances(:, sensor_idx)./lambda, log10( abs( p_sensor(:) ) ) );
+% plot the theoretical pressure values against distance
+p_sensor = p_sphere( distances(:) , (omega_vec(freq_idx) ./(2* pi)) , speed_sound);
+theo = zeros( 285^2, 2 );
+theo(:,1) = distances(:);
+theo(:,2) = abs(p_sensor(:));
+theo = sortrows(theo);
+p = plot( theo(:,1), log10( theo(:,2 ) ) );
 
 hold off;
-title( "Pressure vs Distance" );
+title( "Pressure vs Distance at "+ num2str( omega_vec(freq_idx) / 2 / pi ) );
 legend( [ s, p], [ "Calculated Pressure Values", "Theoretical Pressure Values" ] );
 xlabel( "Distance" );
 ylabel( "log_{10}(Pressure)" );
